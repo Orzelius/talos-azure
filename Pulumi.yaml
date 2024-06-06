@@ -1,0 +1,7 @@
+name: talos-azure
+runtime: go
+description: A talos cluster on azure
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: azure-go
