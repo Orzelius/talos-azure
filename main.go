@@ -1,6 +1,8 @@
 package main
 
 import (
+	"talos-azure/network"
+
 	"github.com/pulumi/pulumi-azure-native-sdk/resources/v2"
 	"github.com/pulumi/pulumi-azure-native-sdk/storage/v2"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -42,6 +44,17 @@ func main() {
 				return accountKeys.Keys[0].Value, nil
 			},
 		))
+
+		networkResources, err := network.ProvisionNetworking(ctx, network.ProvisionNetworkingParams{
+			ControlPlaneNodeCount: 2,
+			ResourceGroup:         resourceGroup,
+		})
+		if err != nil {
+			return err
+		}
+
+		ctx.Export("Vnet.Name", networkResources.Vnet.Name)
+		ctx.Export("PublicIp.IpAddress", networkResources.PublicIp.IpAddress)
 
 		return nil
 	})
