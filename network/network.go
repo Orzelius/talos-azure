@@ -15,8 +15,8 @@ type NetworkResources struct {
 	PublicIp                  *network.PublicIPAddress
 	LoadBalancer              *network.LoadBalancer
 	InboundNatRule            *network.InboundNatRule
-	networkInterfaces         []*network.NetworkInterface
-	networkInterfacePublicIPs []*network.PublicIPAddress
+	NetworkInterfaces         []*network.NetworkInterface
+	NetworkInterfacePublicIPs []*network.PublicIPAddress
 }
 
 type ProvisionNetworkingParams struct {
@@ -127,7 +127,7 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 		if err != nil {
 			return NetworkResources{}, err
 		}
-		nicPubIps = append(nicPubIps, nicPubIp)
+		nicPubIps[i] = nicPubIp
 
 		nicName := fmt.Sprintf("controlplane-nic-%d", i)
 		nic, err := network.NewNetworkInterface(ctx, nicName,
@@ -146,7 +146,7 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 		if err != nil {
 			return NetworkResources{}, err
 		}
-		nics = append(nics, nic)
+		nics[i] = nic
 	}
 
 	return NetworkResources{vnet, networkSecurityGroup, publicIp, lb, lbRule, nics, nicPubIps}, nil

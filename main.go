@@ -53,6 +53,27 @@ func main() {
 			return err
 		}
 
+		nicOutputs := make([]interface{}, len(networkResources.NetworkInterfaces))
+		for i, nic := range networkResources.NetworkInterfaces {
+			nicIp := networkResources.NetworkInterfacePublicIPs[i].IpAddress
+			nicOutput := pulumi.All(nic.Name, nicIp).ApplyT(
+				func(args []interface{}) map[string]interface{} {
+					name := args[0].(string)
+					ipAddress := args[1].(*string)
+					return map[string]interface{}{
+						"name": name,
+						"ip":   *ipAddress,
+					}
+				},
+			)
+			nicOutputs[i] = nicOutput
+		}
+		nicOut := pulumi.All(nicOutputs...).ApplyT(
+			func(args []interface{}) []interface{} {
+				return args
+			}).(pulumi.ArrayOutput)
+
+		ctx.Export("NetworkInterfaces", nicOut)
 		ctx.Export("Vnet.Name", networkResources.Vnet.Name)
 		ctx.Export("PublicIp.IpAddress", networkResources.PublicIp.IpAddress)
 
