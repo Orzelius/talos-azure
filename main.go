@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"talos-azure/cluster"
 	"talos-azure/network"
 
@@ -79,11 +80,21 @@ func main() {
 				return args
 			}).(pulumi.ArrayOutput)
 
+		clusterClientCfg.TalosConfig().ApplyT(func(cfg string) (string, error) {
+			d1 := []byte(cfg)
+			err := os.WriteFile("secrets/talosconfig", d1, 0644)
+			if err != nil {
+				return "", err
+			}
+
+			return "ok", nil
+		})
+
 		ctx.Export("NetworkInterfaces", nicOut)
 		ctx.Export("Vnet.Name", networkResources.Vnet.Name)
 		ctx.Export("PublicIp.IpAddress", networkResources.PublicIp.IpAddress)
 		ctx.Export("LoadBalancer.IpAddress", networkResources.PublicIp.IpAddress)
-		ctx.Export("clusterClientCfg", clusterClientCfg)
+		ctx.Export("clusterClientCfg", clusterClientCfg.TalosConfig())
 
 		return nil
 	})

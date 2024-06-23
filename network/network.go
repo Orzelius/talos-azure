@@ -26,7 +26,6 @@ type ProvisionNetworkingParams struct {
 
 func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) (NetworkResources, error) {
 	conf, err := helpers.GetConfig(ctx)
-	fmt.Println(conf.AzRegion)
 	if err != nil {
 		return NetworkResources{}, err
 	}
