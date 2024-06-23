@@ -1,6 +1,7 @@
 package main
 
 import (
+	"talos-azure/cluster"
 	"talos-azure/network"
 
 	"github.com/pulumi/pulumi-azure-native-sdk/resources/v2"
@@ -53,6 +54,11 @@ func main() {
 			return err
 		}
 
+		clusterClientCfg, err := cluster.CreateClusterClientCfg(ctx, "talos", networkResources.PublicIp.IpAddress)
+		if err != nil {
+			return err
+		}
+
 		nicOutputs := make([]interface{}, len(networkResources.NetworkInterfaces))
 		for i, nic := range networkResources.NetworkInterfaces {
 			nicIp := networkResources.NetworkInterfacePublicIPs[i].IpAddress
@@ -76,6 +82,8 @@ func main() {
 		ctx.Export("NetworkInterfaces", nicOut)
 		ctx.Export("Vnet.Name", networkResources.Vnet.Name)
 		ctx.Export("PublicIp.IpAddress", networkResources.PublicIp.IpAddress)
+		ctx.Export("LoadBalancer.IpAddress", networkResources.PublicIp.IpAddress)
+		ctx.Export("clusterClientCfg", clusterClientCfg)
 
 		return nil
 	})
