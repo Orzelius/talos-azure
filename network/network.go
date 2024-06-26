@@ -21,7 +21,7 @@ type NetworkResources struct {
 
 type ProvisionNetworkingParams struct {
 	ResourceGroup         *resources.ResourceGroup
-	ControlPlaneNodeCount int
+	ControlplaneNodeCount int
 }
 
 func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) (NetworkResources, error) {
@@ -115,9 +115,9 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 		return NetworkResources{}, err
 	}
 
-	nicPubIps := make([]*network.PublicIPAddress, params.ControlPlaneNodeCount)
-	nics := make([]*network.NetworkInterface, params.ControlPlaneNodeCount)
-	for i := 0; i < params.ControlPlaneNodeCount; i++ {
+	nicPubIps := make([]*network.PublicIPAddress, params.ControlplaneNodeCount)
+	nics := make([]*network.NetworkInterface, params.ControlplaneNodeCount)
+	for i := 0; i < params.ControlplaneNodeCount; i++ {
 		nicPubIp, err := network.NewPublicIPAddress(ctx, fmt.Sprintf("controlplane-public-ip-%d", i),
 			&network.PublicIPAddressArgs{
 				ResourceGroupName:        params.ResourceGroup.Name,

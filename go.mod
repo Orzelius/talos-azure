@@ -15,6 +15,7 @@ require (
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.2 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
+	github.com/pulumi/pulumi-azure-native-sdk/compute/v2 v2.46.0 // indirect
 	github.com/pulumiverse/pulumi-talos/sdk v0.2.1-0.20240531071858-a084be6d2515 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
@@ -69,7 +70,7 @@ require (
 	github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231 // indirect
 	github.com/pulumi/esc v0.9.1 // indirect
 	github.com/pulumi/pulumi-azure-native-sdk/network/v2 v2.45.0
-	github.com/pulumi/pulumi-azure-native-sdk/v2 v2.45.0 // indirect
+	github.com/pulumi/pulumi-azure-native-sdk/v2 v2.46.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06 // indirect

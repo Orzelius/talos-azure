@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"talos-azure/cluster"
+	"talos-azure/helpers"
 	"talos-azure/network"
 
 	"github.com/pulumi/pulumi-azure-native-sdk/resources/v2"
@@ -12,6 +14,11 @@ import (
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
+		conf, err := helpers.GetConfig(ctx)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("azure region: %s", conf.AzRegion)
 		// Create an Azure Resource Group
 		resourceGroup, err := resources.NewResourceGroup(ctx, "resourceGroup", nil)
 		if err != nil {
@@ -19,7 +26,7 @@ func main() {
 		}
 
 		// Create an Azure resource (Storage Account)
-		account, err := storage.NewStorageAccount(ctx, "sa", &storage.StorageAccountArgs{
+		storageAcc, err := storage.NewStorageAccount(ctx, "sa", &storage.StorageAccountArgs{
 			ResourceGroupName: resourceGroup.Name,
 			Sku: &storage.SkuArgs{
 				Name: pulumi.String("Standard_LRS"),
@@ -31,7 +38,7 @@ func main() {
 		}
 
 		// Export the primary key of the Storage Account
-		ctx.Export("primaryStorageKey", pulumi.All(resourceGroup.Name, account.Name).ApplyT(
+		ctx.Export("primaryStorageKey", pulumi.All(resourceGroup.Name, storageAcc.Name).ApplyT(
 			func(args []interface{}) (string, error) {
 				resourceGroupName := args[0].(string)
 				accountName := args[1].(string)
@@ -48,14 +55,37 @@ func main() {
 		))
 
 		networkResources, err := network.ProvisionNetworking(ctx, network.ProvisionNetworkingParams{
-			ControlPlaneNodeCount: 2,
+			ControlplaneNodeCount: 2,
 			ResourceGroup:         resourceGroup,
 		})
 		if err != nil {
 			return err
 		}
 
-		clusterClientCfg, err := cluster.CreateClusterClientCfg(ctx, "talos", networkResources.PublicIp.IpAddress)
+		clusterSecrets, err := cluster.GetMachineSecrets(ctx, conf.ClusterName, networkResources.PublicIp.IpAddress)
+		if err != nil {
+			return err
+		}
+
+		commonTalosProps := cluster.CommonProps{
+			ClusterName: conf.ClusterName,
+			PublicIp:    networkResources.PublicIp.IpAddress,
+			Secrets:     clusterSecrets,
+		}
+		clusterClientCfg := cluster.GetClusterClientCfg(ctx, commonTalosProps)
+
+		machineCfg := cluster.GetMachineConfiguration(ctx, commonTalosProps)
+
+		nicIds := make([]pulumi.IDOutput, len(networkResources.NetworkInterfaces))
+		for i, nic := range networkResources.NetworkInterfaces {
+			nicIds[i] = nic.ID()
+		}
+		_, err = cluster.ProvisionCompute(ctx, cluster.ProvisionComputeParams{
+			ResourceGroup:  resourceGroup,
+			MachineConfigs: machineCfg,
+			NicIds:         nicIds,
+			StorageAccUri:  storageAcc.PrimaryEndpoints.Blob(),
+		})
 		if err != nil {
 			return err
 		}
@@ -95,6 +125,7 @@ func main() {
 		ctx.Export("PublicIp.IpAddress", networkResources.PublicIp.IpAddress)
 		ctx.Export("LoadBalancer.IpAddress", networkResources.PublicIp.IpAddress)
 		ctx.Export("clusterClientCfg", clusterClientCfg.TalosConfig())
+		ctx.Export("storageAccount.Name", storageAcc.Name)
 
 		return nil
 	})

@@ -153,6 +153,8 @@ github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231 h1:vkHw5I/plNdTr435
 github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231/go.mod h1:murToZ2N9hNJzewjHBgfFdXhZKjY3z5cYC1VXk+lbFE=
 github.com/pulumi/esc v0.9.1 h1:HH5eEv8sgyxSpY5a8yePyqFXzA8cvBvapfH8457+mIs=
 github.com/pulumi/esc v0.9.1/go.mod h1:oEJ6bOsjYlQUpjf70GiX+CXn3VBmpwFDxUTlmtUN84c=
+github.com/pulumi/pulumi-azure-native-sdk/compute/v2 v2.46.0 h1:C1/97Tt4PHJL14etAHBY8Cs5+crZVB9R7Oai7Lh7pDo=
+github.com/pulumi/pulumi-azure-native-sdk/compute/v2 v2.46.0/go.mod h1:J/GPqdCLVvaYvwmax1rtJDQNXu7SQu7mejD6kxPcOXk=
 github.com/pulumi/pulumi-azure-native-sdk/network/v2 v2.45.0 h1:uUzU9o1JVKkeotHi3EVJSe2U42nTQUzW1rCLRxJjQUk=
 github.com/pulumi/pulumi-azure-native-sdk/network/v2 v2.45.0/go.mod h1:idXEoECzvjGSRDj6acTDABtR8H65EVZ5l1IhwV5ApYU=
 github.com/pulumi/pulumi-azure-native-sdk/resources/v2 v2.45.0 h1:Y199bwRu/YNAKvz6eOMw4elJQsVDbu/g9gjPUw7E0Ng=
@@ -161,6 +163,8 @@ github.com/pulumi/pulumi-azure-native-sdk/storage/v2 v2.45.0 h1:Sl1ANAacpgRUPENu
 github.com/pulumi/pulumi-azure-native-sdk/storage/v2 v2.45.0/go.mod h1:i0f7n5clAURlOqIEqcQQGYE04Ic6hU1gzf+Htwg51eY=
 github.com/pulumi/pulumi-azure-native-sdk/v2 v2.45.0 h1:7Ms+rNv5MJUuvNxh9CQPa36tsL8mGYLxRiOXafHLzeg=
 github.com/pulumi/pulumi-azure-native-sdk/v2 v2.45.0/go.mod h1:SWhmsFIzVmrGTMAR50gLfg1y5K3DUXPrQtarc1A8WfU=
+github.com/pulumi/pulumi-azure-native-sdk/v2 v2.46.0 h1:oqYytn/eCI+p/BfZka24XiUJeM0Jo1tF1BRo3k83mTM=
+github.com/pulumi/pulumi-azure-native-sdk/v2 v2.46.0/go.mod h1:B/a5CMAcag7A6D4anCtuBRy4pRDxSSwLQZk1lTIbzec=
 github.com/pulumi/pulumi/sdk/v3 v3.120.0 h1:KYtMkCmcSg4U+w41/Q0l3llKEodbfdyq6J0VMoEoVmY=
 github.com/pulumi/pulumi/sdk/v3 v3.120.0/go.mod h1:/mQJPO+HehhoSJ9O3C6eUKAGeAr+4KSrbDhLsXHKldc=
 github.com/pulumiverse/pulumi-talos/sdk v0.2.0 h1:41Kun7RdGsi2L5lLfdtsBlMRwqnvxnWDIunCND7+ocM=
