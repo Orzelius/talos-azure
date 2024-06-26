@@ -1,4 +1,5 @@
 config:
+  azure-native:location: japaneast
 
   cluster:name: talos
   cluster:workers: 2
