@@ -2,7 +2,7 @@ config:
   azure-native:location: japaneast
 
   cluster:name: talos
-  cluster:workers: 2
-  cluster:controls: 2
+  cluster:workers: 0
+  cluster:controls: 1
   cluster:architecture: talos-x64
   cluster:talos-version: latest

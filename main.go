@@ -85,6 +85,8 @@ func main() {
 			MachineConfigs: machineCfg,
 			NicIds:         nicIds,
 			StorageAccUri:  storageAcc.PrimaryEndpoints.Blob(),
+			SubnetID:       networkResources.Vnet.Subnets.Index(pulumi.Int(0)).Id(),
+			NsgId:          networkResources.NetworkSecurityGroup.ID(),
 		})
 		if err != nil {
 			return err
