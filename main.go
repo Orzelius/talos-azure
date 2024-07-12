@@ -55,7 +55,7 @@ func main() {
 		))
 
 		networkResources, err := network.ProvisionNetworking(ctx, network.ProvisionNetworkingParams{
-			ControlplaneNodeCount: 2,
+			ControlplaneNodeCount: conf.ControlCount,
 			ResourceGroup:         resourceGroup,
 		})
 		if err != nil {
