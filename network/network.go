@@ -12,11 +12,13 @@ import (
 type NetworkResources struct {
 	Vnet                      *network.VirtualNetwork
 	NetworkSecurityGroup      *network.NetworkSecurityGroup
-	PublicIp                  *network.PublicIPAddress
+	PublicLbIp                *network.PublicIPAddress
+	PublicNatIp               *network.PublicIPAddress
 	LoadBalancer              *network.LoadBalancer
 	InboundNatRule            *network.InboundNatRule
 	NetworkInterfaces         []*network.NetworkInterface
 	NetworkInterfacePublicIPs []*network.PublicIPAddress
+	NatGateway                *network.NatGateway
 }
 
 type ProvisionNetworkingParams struct {
@@ -30,9 +32,38 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 		return NetworkResources{}, err
 	}
 
+	publicNatIp, err := network.NewPublicIPAddress(ctx, "public-nat-ip", &network.PublicIPAddressArgs{
+		PublicIPAllocationMethod: pulumi.String("static"),
+		ResourceGroupName:        params.ResourceGroup.Name,
+		Sku: network.PublicIPAddressSkuArgs{
+			Name: pulumi.String(network.PublicIPAddressSkuNameStandard),
+		},
+	})
+	if err != nil {
+		return NetworkResources{}, err
+	}
+
+	natGateway, err := network.NewNatGateway(ctx, "natGateway", &network.NatGatewayArgs{
+		PublicIpAddresses: network.SubResourceArray{
+			&network.SubResourceArgs{
+				Id: publicNatIp.ID(),
+			},
+		},
+		ResourceGroupName: params.ResourceGroup.Name,
+		Sku: &network.NatGatewaySkuArgs{
+			Name: pulumi.String(network.NatGatewaySkuNameStandard),
+		},
+	})
+	if err != nil {
+		return NetworkResources{}, err
+	}
+
 	var subnet = network.SubnetTypeArgs{
 		Name:          pulumi.String("subnet"),
 		AddressPrefix: pulumi.String("10.0.0.0/24"),
+		NatGateway: network.SubResourceArgs{
+			Id: natGateway.ID(),
+		},
 	}
 	subnet = *subnet.Defaults()
 	vnet, err := network.NewVirtualNetwork(ctx, "vnet", &network.VirtualNetworkArgs{
@@ -65,9 +96,12 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 		return NetworkResources{}, err
 	}
 
-	publicIp, err := network.NewPublicIPAddress(ctx, "public-ip", &network.PublicIPAddressArgs{
+	publicLbIp, err := network.NewPublicIPAddress(ctx, "public-lb-ip", &network.PublicIPAddressArgs{
 		PublicIPAllocationMethod: pulumi.String("static"),
 		ResourceGroupName:        params.ResourceGroup.Name,
+		Sku: network.PublicIPAddressSkuArgs{
+			Name: pulumi.String(network.PublicIPAddressSkuNameStandard),
+		},
 	})
 	if err != nil {
 		return NetworkResources{}, err
@@ -78,10 +112,13 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 			network.FrontendIPConfigurationArgs{
 				Name: pulumi.String("talos-fe"),
 				PublicIPAddress: network.PublicIPAddressTypeArgs{
-					IpAddress: publicIp.IpAddress,
-					Id:        publicIp.ID(),
+					IpAddress: publicLbIp.IpAddress,
+					Id:        publicLbIp.ID(),
 				},
 			},
+		},
+		Sku: network.LoadBalancerSkuArgs{
+			Name: pulumi.String(network.LoadBalancerSkuNameStandard),
 		},
 		BackendAddressPools: network.BackendAddressPoolArray{network.BackendAddressPoolArgs{
 			Name: pulumi.String("talos-be-pool"),
@@ -122,6 +159,9 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 			&network.PublicIPAddressArgs{
 				ResourceGroupName:        params.ResourceGroup.Name,
 				PublicIPAllocationMethod: pulumi.String("static"),
+				Sku: network.PublicIPAddressSkuArgs{
+					Name: pulumi.String(network.PublicIPAddressSkuNameStandard),
+				},
 			})
 		if err != nil {
 			return NetworkResources{}, err
@@ -148,5 +188,5 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 		nics[i] = nic
 	}
 
-	return NetworkResources{vnet, networkSecurityGroup, publicIp, lb, lbRule, nics, nicPubIps}, nil
+	return NetworkResources{vnet, networkSecurityGroup, publicLbIp, publicNatIp, lb, lbRule, nics, nicPubIps, natGateway}, nil
 }

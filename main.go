@@ -62,14 +62,14 @@ func main() {
 			return err
 		}
 
-		clusterSecrets, err := cluster.GetMachineSecrets(ctx, conf.ClusterName, networkResources.PublicIp.IpAddress)
+		clusterSecrets, err := cluster.GetMachineSecrets(ctx, conf.ClusterName, networkResources.PublicLbIp.IpAddress)
 		if err != nil {
 			return err
 		}
 
 		commonTalosProps := cluster.CommonProps{
 			ClusterName: conf.ClusterName,
-			PublicIp:    networkResources.PublicIp.IpAddress,
+			PublicIp:    networkResources.PublicLbIp.IpAddress,
 			Secrets:     clusterSecrets,
 		}
 		clusterClientCfg := cluster.GetClusterClientCfg(ctx, commonTalosProps)
@@ -124,8 +124,9 @@ func main() {
 
 		ctx.Export("NetworkInterfaces", nicOut)
 		ctx.Export("Vnet.Name", networkResources.Vnet.Name)
-		ctx.Export("PublicIp.IpAddress", networkResources.PublicIp.IpAddress)
-		ctx.Export("LoadBalancer.IpAddress", networkResources.PublicIp.IpAddress)
+		ctx.Export("PublicIp.IpAddress", networkResources.PublicLbIp.IpAddress)
+		ctx.Export("PublicNatIp.IpAddress", networkResources.PublicNatIp.IpAddress)
+		ctx.Export("LoadBalancer.IpAddress", networkResources.PublicLbIp.IpAddress)
 		ctx.Export("clusterClientCfg", clusterClientCfg.TalosConfig())
 		ctx.Export("storageAccount.Name", storageAcc.Name)
 
