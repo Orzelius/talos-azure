@@ -16,14 +16,14 @@ type NetworkResources struct {
 	PublicNatIp               *network.PublicIPAddress
 	LoadBalancer              *network.LoadBalancer
 	InboundNatRule            *network.InboundNatRule
-	NetworkInterfaces         []*network.NetworkInterface
+	ControlNetworkInterfaces  []*network.NetworkInterface
+	WorkerNetworkInterfaces   []*network.NetworkInterface
 	NetworkInterfacePublicIPs []*network.PublicIPAddress
 	NatGateway                *network.NatGateway
 }
 
 type ProvisionNetworkingParams struct {
-	ResourceGroup         *resources.ResourceGroup
-	ControlplaneNodeCount int
+	ResourceGroup *resources.ResourceGroup
 }
 
 func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) (NetworkResources, error) {
@@ -152,9 +152,10 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 		return NetworkResources{}, err
 	}
 
-	nicPubIps := make([]*network.PublicIPAddress, params.ControlplaneNodeCount)
-	nics := make([]*network.NetworkInterface, params.ControlplaneNodeCount)
-	for i := 0; i < params.ControlplaneNodeCount; i++ {
+	nicPubIps := make([]*network.PublicIPAddress, conf.ControlCount)
+	controlPlaneNics := make([]*network.NetworkInterface, conf.ControlCount)
+	workerNics := make([]*network.NetworkInterface, conf.WorkerCount)
+	for i := 0; i < conf.ControlCount; i++ {
 		nicPubIp, err := network.NewPublicIPAddress(ctx, fmt.Sprintf("controlplane-public-ip-%d", i),
 			&network.PublicIPAddressArgs{
 				ResourceGroupName:        params.ResourceGroup.Name,
@@ -169,24 +170,47 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 		nicPubIps[i] = nicPubIp
 
 		nicName := fmt.Sprintf("controlplane-nic-%d", i)
-		nic, err := network.NewNetworkInterface(ctx, nicName,
-			&network.NetworkInterfaceArgs{
-				ResourceGroupName:    params.ResourceGroup.Name,
-				NetworkInterfaceName: pulumi.String(nicName),
-				NetworkSecurityGroup: network.NetworkSecurityGroupTypeArgs{
-					Id: networkSecurityGroup.ID(),
-				},
-				IpConfigurations: network.NetworkInterfaceIPConfigurationArray{network.NetworkInterfaceIPConfigurationArgs{
-					Name:            pulumi.String(fmt.Sprintf("%s-ip-conf", nicName)),
-					PublicIPAddress: network.PublicIPAddressTypeArgs{Id: nicPubIp.ID()},
-					Subnet:          network.SubnetTypeArgs{Id: vnet.Subnets.Index(pulumi.Int(0)).Id()},
-				}},
-			})
+		nic, err := createNic(ctx, nicName, params, networkSecurityGroup, nicPubIp, vnet)
 		if err != nil {
 			return NetworkResources{}, err
 		}
-		nics[i] = nic
+		controlPlaneNics[i] = nic
+	}
+	for i := 0; i < conf.WorkerCount; i++ {
+		nicName := fmt.Sprintf("worker-nic-%d", i)
+		nic, err := createNic(ctx, nicName, params, networkSecurityGroup, nil, vnet)
+		if err != nil {
+			return NetworkResources{}, err
+		}
+		workerNics[i] = nic
 	}
 
-	return NetworkResources{vnet, networkSecurityGroup, publicLbIp, publicNatIp, lb, lbRule, nics, nicPubIps, natGateway}, nil
+	return NetworkResources{vnet, networkSecurityGroup, publicLbIp, publicNatIp, lb, lbRule, controlPlaneNics, workerNics, nicPubIps, natGateway}, nil
+}
+
+func createNic(
+	ctx *pulumi.Context,
+	nicName string,
+	params ProvisionNetworkingParams,
+	networkSecurityGroup *network.NetworkSecurityGroup,
+	nicPubIp *network.PublicIPAddress,
+	vnet *network.VirtualNetwork,
+) (*network.NetworkInterface, error) {
+	var pubIp *network.PublicIPAddressTypeArgs
+	if nicPubIp != nil {
+		pubIp = &network.PublicIPAddressTypeArgs{Id: nicPubIp.ID()}
+	}
+	return network.NewNetworkInterface(ctx, nicName,
+		&network.NetworkInterfaceArgs{
+			ResourceGroupName:    params.ResourceGroup.Name,
+			NetworkInterfaceName: pulumi.String(nicName),
+			NetworkSecurityGroup: network.NetworkSecurityGroupTypeArgs{
+				Id: networkSecurityGroup.ID(),
+			},
+			IpConfigurations: network.NetworkInterfaceIPConfigurationArray{network.NetworkInterfaceIPConfigurationArgs{
+				Name:            pulumi.String(fmt.Sprintf("%s-ip-conf", nicName)),
+				PublicIPAddress: pubIp,
+				Subnet:          network.SubnetTypeArgs{Id: vnet.Subnets.Index(pulumi.Int(0)).Id()},
+			}},
+		})
 }

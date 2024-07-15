@@ -55,8 +55,7 @@ func main() {
 		))
 
 		networkResources, err := network.ProvisionNetworking(ctx, network.ProvisionNetworkingParams{
-			ControlplaneNodeCount: conf.ControlCount,
-			ResourceGroup:         resourceGroup,
+			ResourceGroup: resourceGroup,
 		})
 		if err != nil {
 			return err
@@ -76,14 +75,20 @@ func main() {
 
 		machineCfg := cluster.GetMachineConfiguration(ctx, commonTalosProps)
 
-		nicIds := make([]pulumi.IDOutput, len(networkResources.NetworkInterfaces))
-		for i, nic := range networkResources.NetworkInterfaces {
-			nicIds[i] = nic.ID()
+		controlNicIds := make([]pulumi.IDOutput, len(networkResources.ControlNetworkInterfaces))
+		for i, nic := range networkResources.ControlNetworkInterfaces {
+			controlNicIds[i] = nic.ID()
+		}
+
+		workerNicIds := make([]pulumi.IDOutput, len(networkResources.WorkerNetworkInterfaces))
+		for i, nic := range networkResources.WorkerNetworkInterfaces {
+			workerNicIds[i] = nic.ID()
 		}
 		_, err = cluster.ProvisionCompute(ctx, cluster.ProvisionComputeParams{
 			ResourceGroup:  resourceGroup,
 			MachineConfigs: machineCfg,
-			NicIds:         nicIds,
+			WorkerNicIds:   workerNicIds,
+			ControlNicIds:  controlNicIds,
 			StorageAccUri:  storageAcc.PrimaryEndpoints.Blob(),
 			SubnetID:       networkResources.Vnet.Subnets.Index(pulumi.Int(0)).Id(),
 			NsgId:          networkResources.NetworkSecurityGroup.ID(),
@@ -92,8 +97,8 @@ func main() {
 			return err
 		}
 
-		nicOutputs := make([]interface{}, len(networkResources.NetworkInterfaces))
-		for i, nic := range networkResources.NetworkInterfaces {
+		nicOutputs := make([]interface{}, len(networkResources.ControlNetworkInterfaces))
+		for i, nic := range networkResources.ControlNetworkInterfaces {
 			nicIp := networkResources.NetworkInterfacePublicIPs[i].IpAddress
 			nicOutput := pulumi.All(nic.Name, nicIp).ApplyT(
 				func(args []interface{}) map[string]interface{} {

@@ -18,7 +18,8 @@ type ComputeResources struct {
 type ProvisionComputeParams struct {
 	ResourceGroup  *resources.ResourceGroup
 	MachineConfigs MachineConfigs
-	NicIds         []pulumi.IDOutput
+	WorkerNicIds   []pulumi.IDOutput
+	ControlNicIds  []pulumi.IDOutput
 	StorageAccUri  pulumi.StringPtrInput
 	SubnetID       pulumi.StringPtrOutput
 	NsgId          pulumi.IDOutput
@@ -56,7 +57,7 @@ func ProvisionCompute(ctx *pulumi.Context, params ProvisionComputeParams) (Compu
 			imageId:           imageId,
 			availabilitySetID: availabilitySet.ID(),
 			isControlplane:    true,
-			nicID:             params.NicIds[i],
+			nicID:             params.ControlNicIds[i],
 			subnetID:          params.SubnetID,
 			nsgId:             params.NsgId,
 		})
@@ -72,7 +73,7 @@ func ProvisionCompute(ctx *pulumi.Context, params ProvisionComputeParams) (Compu
 			imageId:           imageId,
 			availabilitySetID: availabilitySet.ID(),
 			isControlplane:    false,
-			nicID:             pulumi.IDOutput{},
+			nicID:             params.WorkerNicIds[i],
 			subnetID:          params.SubnetID,
 			nsgId:             params.NsgId,
 		})
@@ -97,36 +98,10 @@ type createNodeParams struct {
 
 func createNode(ctx *pulumi.Context, params ProvisionComputeParams, nodeParams createNodeParams) (*compute.VirtualMachine, error) {
 	var machineCfg pulumi.StringOutput
-	var networkInterfaces compute.NetworkInterfaceReferenceArray
-	var networkInterfaceConfiguration compute.VirtualMachineNetworkInterfaceConfigurationArray
-	var networkApiVersion pulumi.StringPtrInput
 	if nodeParams.isControlplane {
-		networkInterfaces = compute.NetworkInterfaceReferenceArray{&compute.NetworkInterfaceReferenceArgs{
-			Id: nodeParams.nicID,
-		}}
 		machineCfg = params.MachineConfigs.Controlplane.MachineConfiguration()
 	} else {
-		networkApiVersion = compute.NetworkApiVersion("2023-11-01")
 		machineCfg = params.MachineConfigs.Worker.MachineConfiguration()
-		networkInterfaceConfiguration = compute.VirtualMachineNetworkInterfaceConfigurationArray{&compute.VirtualMachineNetworkInterfaceConfigurationArgs{
-			Name: pulumi.String(nodeParams.name),
-			NetworkSecurityGroup: compute.SubResourceArgs{
-				Id: nodeParams.nsgId,
-			},
-			IpConfigurations: compute.VirtualMachineNetworkInterfaceIPConfigurationArray{&compute.VirtualMachineNetworkInterfaceIPConfigurationArgs{
-				Name: pulumi.String(nodeParams.name),
-				Subnet: compute.SubResourceArgs{
-					Id: nodeParams.subnetID,
-				},
-			}},
-		}}
-	}
-
-	var networkProfile = compute.NetworkProfileArgs{
-		// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/change-log/virtualnetworks
-		NetworkApiVersion:              networkApiVersion,
-		NetworkInterfaces:              networkInterfaces,
-		NetworkInterfaceConfigurations: networkInterfaceConfiguration,
 	}
 
 	return compute.NewVirtualMachine(ctx, nodeParams.name, &compute.VirtualMachineArgs{
@@ -155,7 +130,11 @@ func createNode(ctx *pulumi.Context, params ProvisionComputeParams, nodeParams c
 				StorageUri: params.StorageAccUri,
 			},
 		},
-		NetworkProfile: &networkProfile,
+		NetworkProfile: compute.NetworkProfileArgs{
+			NetworkInterfaces: compute.NetworkInterfaceReferenceArray{compute.NetworkInterfaceReferenceArgs{
+				Id: nodeParams.nicID,
+			}},
+		},
 		AvailabilitySet: compute.SubResourceArgs{
 			Id: nodeParams.availabilitySetID,
 		},
