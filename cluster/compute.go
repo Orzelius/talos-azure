@@ -60,6 +60,7 @@ func ProvisionCompute(ctx *pulumi.Context, params ProvisionComputeParams) (Compu
 			nicID:             params.ControlNicIds[i],
 			subnetID:          params.SubnetID,
 			nsgId:             params.NsgId,
+			vmSize:            conf.Vm,
 		})
 		if err != nil {
 			return ComputeResources{}, err
@@ -76,6 +77,7 @@ func ProvisionCompute(ctx *pulumi.Context, params ProvisionComputeParams) (Compu
 			nicID:             params.WorkerNicIds[i],
 			subnetID:          params.SubnetID,
 			nsgId:             params.NsgId,
+			vmSize:            conf.Vm,
 		})
 		if err != nil {
 			return ComputeResources{}, err
@@ -94,6 +96,7 @@ type createNodeParams struct {
 	nicID             pulumi.IDOutput
 	subnetID          pulumi.StringPtrInput
 	nsgId             pulumi.IDOutput
+	vmSize            string
 }
 
 func createNode(ctx *pulumi.Context, params ProvisionComputeParams, nodeParams createNodeParams) (*compute.VirtualMachine, error) {
@@ -107,7 +110,7 @@ func createNode(ctx *pulumi.Context, params ProvisionComputeParams, nodeParams c
 	return compute.NewVirtualMachine(ctx, nodeParams.name, &compute.VirtualMachineArgs{
 		ResourceGroupName: params.ResourceGroup.Name,
 		HardwareProfile: &compute.HardwareProfileArgs{
-			VmSize: pulumi.String(compute.VirtualMachineSizeTypes_Standard_B1s),
+			VmSize: pulumi.String(nodeParams.vmSize),
 		},
 		StorageProfile: compute.StorageProfileArgs{
 			ImageReference: &compute.ImageReferenceArgs{

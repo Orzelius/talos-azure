@@ -3,6 +3,7 @@ config:
 
   cluster:name: talos
   cluster:workers: 1
-  cluster:controls: 1
+  cluster:controls: 2
   cluster:architecture: talos-x64
   cluster:talos-version: latest
+  cluster:vm: Standard_B1ms

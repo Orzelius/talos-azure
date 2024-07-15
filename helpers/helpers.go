@@ -15,6 +15,7 @@ type CustomConfig struct {
 	Architecture string
 	TalosVersion string
 	ClusterName  string
+	Vm           string
 }
 
 func GetConfig(ctx *pulumi.Context) (CustomConfig, error) {
@@ -64,6 +65,11 @@ func GetConfig(ctx *pulumi.Context) (CustomConfig, error) {
 		return CustomConfig{}, getConfNotFoundErr("cluster", "name")
 	}
 
+	vm := clusterCfg.Require("vm")
+	if name == "" {
+		return CustomConfig{}, getConfNotFoundErr("cluster", "vm")
+	}
+
 	return CustomConfig{
 		AzRegion:     azRegion,
 		WorkerCount:  workerCount,
@@ -71,6 +77,7 @@ func GetConfig(ctx *pulumi.Context) (CustomConfig, error) {
 		Architecture: arc,
 		TalosVersion: talosVer,
 		ClusterName:  name,
+		Vm:           vm,
 	}, nil
 }
 
