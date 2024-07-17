@@ -1,9 +1,10 @@
 config:
   azure-native:location: japaneast
+  azure-native:resource-group-name: talos 
 
   cluster:name: talos
   cluster:workers: 1
   cluster:controls: 2
   cluster:architecture: talos-x64
   cluster:talos-version: latest
-  cluster:vm: Standard_B1ms
+  cluster:vm: Standard_B2s

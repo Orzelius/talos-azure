@@ -20,7 +20,7 @@ func main() {
 		}
 		fmt.Printf("azure region: %s", conf.AzRegion)
 		// Create an Azure Resource Group
-		resourceGroup, err := resources.NewResourceGroup(ctx, "resourceGroup", nil)
+		resourceGroup, err := resources.NewResourceGroup(ctx, conf.ResourceGroupName, nil)
 		if err != nil {
 			return err
 		}

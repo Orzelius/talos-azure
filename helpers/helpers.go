@@ -9,13 +9,14 @@ import (
 )
 
 type CustomConfig struct {
-	AzRegion     string
-	WorkerCount  int
-	ControlCount int
-	Architecture string
-	TalosVersion string
-	ClusterName  string
-	Vm           string
+	AzRegion          string
+	WorkerCount       int
+	ControlCount      int
+	Architecture      string
+	TalosVersion      string
+	ClusterName       string
+	Vm                string
+	ResourceGroupName string
 }
 
 func GetConfig(ctx *pulumi.Context) (CustomConfig, error) {
@@ -31,6 +32,10 @@ func GetConfig(ctx *pulumi.Context) (CustomConfig, error) {
 	azRegion := azConf.Require("location")
 	if azRegion == "" {
 		return CustomConfig{}, getConfNotFoundErr("azure", "location")
+	}
+	resourceGroupName := azConf.Require("resource-group-name")
+	if azRegion == "" {
+		return CustomConfig{}, getConfNotFoundErr("azure", "resource-group-name")
 	}
 
 	workerCountS := clusterCfg.Require("workers")
@@ -71,13 +76,14 @@ func GetConfig(ctx *pulumi.Context) (CustomConfig, error) {
 	}
 
 	return CustomConfig{
-		AzRegion:     azRegion,
-		WorkerCount:  workerCount,
-		ControlCount: controlCount,
-		Architecture: arc,
-		TalosVersion: talosVer,
-		ClusterName:  name,
-		Vm:           vm,
+		AzRegion:          azRegion,
+		WorkerCount:       workerCount,
+		ControlCount:      controlCount,
+		Architecture:      arc,
+		TalosVersion:      talosVer,
+		ClusterName:       name,
+		Vm:                vm,
+		ResourceGroupName: resourceGroupName,
 	}, nil
 }
 
