@@ -44,7 +44,7 @@ type MachineConfigs struct {
 
 func GetMachineConfiguration(ctx *pulumi.Context, props CommonProps) MachineConfigs {
 	enpoint := props.PublicIp.ToStringPtrOutput().ApplyT(func(ip *string) string {
-		return fmt.Sprintf("https://%s:443", *ip)
+		return fmt.Sprintf("https://%s:6443", *ip)
 	}).(pulumi.StringOutput)
 	control := machine.GetConfigurationOutput(ctx, machine.GetConfigurationOutputArgs{
 		ClusterName:     pulumi.String(props.ClusterName),
