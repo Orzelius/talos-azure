@@ -3,8 +3,8 @@ config:
   azure-native:resource-group-name: talos 
 
   cluster:name: talos
-  cluster:workers: 1
-  cluster:controls: 2
+  cluster:workers: 0
+  cluster:controls: 1
   cluster:architecture: talos-x64
   cluster:talos-version: latest
   cluster:vm: Standard_B2s

@@ -152,6 +152,7 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 		return NetworkResources{}, err
 	}
 
+	lbBeAddressPool := lb.BackendAddressPools.Index(pulumi.Int(0)).Id()
 	nicPubIps := make([]*network.PublicIPAddress, conf.ControlCount)
 	controlPlaneNics := make([]*network.NetworkInterface, conf.ControlCount)
 	workerNics := make([]*network.NetworkInterface, conf.WorkerCount)
@@ -170,7 +171,7 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 		nicPubIps[i] = nicPubIp
 
 		nicName := fmt.Sprintf("controlplane-nic-%d", i)
-		nic, err := createNic(ctx, nicName, params, networkSecurityGroup, nicPubIp, vnet)
+		nic, err := createNic(ctx, nicName, params, networkSecurityGroup, nicPubIp, vnet, lbBeAddressPool)
 		if err != nil {
 			return NetworkResources{}, err
 		}
@@ -178,7 +179,7 @@ func ProvisionNetworking(ctx *pulumi.Context, params ProvisionNetworkingParams) 
 	}
 	for i := 0; i < conf.WorkerCount; i++ {
 		nicName := fmt.Sprintf("worker-nic-%d", i)
-		nic, err := createNic(ctx, nicName, params, networkSecurityGroup, nil, vnet)
+		nic, err := createNic(ctx, nicName, params, networkSecurityGroup, nil, vnet, lbBeAddressPool)
 		if err != nil {
 			return NetworkResources{}, err
 		}
@@ -195,6 +196,7 @@ func createNic(
 	networkSecurityGroup *network.NetworkSecurityGroup,
 	nicPubIp *network.PublicIPAddress,
 	vnet *network.VirtualNetwork,
+	lbBEAddressPoolID pulumi.StringPtrOutput,
 ) (*network.NetworkInterface, error) {
 	var pubIp *network.PublicIPAddressTypeArgs
 	if nicPubIp != nil {
@@ -211,6 +213,9 @@ func createNic(
 				Name:            pulumi.String(fmt.Sprintf("%s-ip-conf", nicName)),
 				PublicIPAddress: pubIp,
 				Subnet:          network.SubnetTypeArgs{Id: vnet.Subnets.Index(pulumi.Int(0)).Id()},
+				LoadBalancerBackendAddressPools: network.BackendAddressPoolArray{network.BackendAddressPoolArgs{
+					Id: lbBEAddressPoolID,
+				}},
 			}},
 		})
 }
